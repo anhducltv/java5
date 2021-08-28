@@ -8,25 +8,25 @@
 
 <title>JAVA SERVER PAGE</title>
 </head>
-<body class="bodyLogin">
+<body class="bodyLogin"> 
 
-<div class="col-5 offset-1 mt-5">
+<div class="offset-1 mt-5" >
 <c:if test="${not empty sessionScope.error_message }">
 <div class="alert alert-danger">${sessionScope.error_message }</div>
 </c:if>
 <c:remove var="error_message" scope="session" />
 <form method="post" action="${pageContext.request.contextPath }/login">
-<h3>LOGIN</h3>
+<h3 class="h3Title">LOGIN</h3>
 <br />
 <div>
 <label>Email</label>
-<input type="email" class="form-control" name="email" id="email"  />
+<input type="email" class="form-control" style="width: 350px" name="email" id="email" placeholder="Enter email?"  />
 </div>
 
 <div> 
 <br />
 <label>Password</label>
-<input type="password" class="form-control" name="password" id="password"  />
+<input type="password" class="form-control" style="width: 350px"  name="password" id="password" placeholder="Enter password?" />
 </div>
 <div>
 <br />
