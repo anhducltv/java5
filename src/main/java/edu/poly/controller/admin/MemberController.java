@@ -1,5 +1,6 @@
 package edu.poly.controller.admin;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,7 +77,7 @@ public class MemberController {
 	ProductMapper productMapper;
 	@Autowired
 	CategoryRepository categoryRepo;
-	
+
 	@GetMapping("/member/search-and-page")
 	public String home(Model model, @RequestParam("p") Optional<Integer> p) {
 		Pageable pageable = PageRequest.of(p.orElse(0), 12);
@@ -84,33 +85,31 @@ public class MemberController {
 		model.addAttribute("listProduct", listProduct);
 		return "admin/member";
 	}
-	
+
 	@PostMapping("/member/search-and-page")
 	public String search(Model model, @RequestParam("keywords") Optional<String> kw,
-			@RequestParam("p") Optional<Integer> p ) {	
+			@RequestParam("p") Optional<Integer> p) {
 		String kwords = kw.orElse("");
-	//	session.set("keywords", kwords);
+		// session.set("keywords", kwords);
 		Pageable pageable = PageRequest.of(p.orElse(0), 12);
 		Page<Product> listProduct = productRepo.findByKeyWords("%" + kwords + "%", pageable);
 		model.addAttribute("listProduct", listProduct);
 		return "admin/member";
-		
+
 	}
-	
+
 	@ModelAttribute("danhmucSP")
-	public List<Category> getCategory() {	
+	public List<Category> getCategory() {
 		List<Category> list = categoryRepo.findAll();
 		return list;
 	}
-	
-	
+
 	@GetMapping("/member/viewdetail/{id}")
-	public String viewDetail(Model model,@PathVariable("id") Integer id) {
+	public String viewDetail(Model model, @PathVariable("id") Integer id) {
 		Product product = productRepo.getById(id);
 		model.addAttribute("infoProduct", product);
 		return "admin/detailProduct";
 	}
-	
 
 	@RequestMapping("/member/add/{id}")
 	public String add(@PathVariable("id") Product product, Model model) {
@@ -118,7 +117,7 @@ public class MemberController {
 		Cart cart = this.cartRepo.findByIdAccount(account.getId());
 		if (cartdetailRepo.findCartDetailByIdProduct(product.getId()) == null) {
 			Cartdetail cartdetail = new Cartdetail();
-			String time = java.time.LocalDateTime.now() + "";			
+			String time = java.time.LocalDateTime.now() + "";
 			cartdetail.setCart(cart);
 			cartdetail.setProduct(product);
 			cartdetail.setCreatedate(time);
@@ -126,65 +125,67 @@ public class MemberController {
 			this.cartdetailRepo.save(cartdetail);
 		} else {
 			Cartdetail find = cartdetailRepo.findCartDetailByIdProduct(product.getId());
-			find.setQuantity(find.getQuantity()+1);
+			find.setQuantity(find.getQuantity() + 1);
 			this.cartdetailRepo.save(find);
 		}
 		request.getSession().setAttribute("messageCart", "Đã thêm sản phẩm vào giỏ hàng !");
 		return "redirect:/member/search-and-page";
 	}
-	
+
 	@RequestMapping("/member/viewCart/")
 	public String viewCart(Model model) {
 		Account account = (Account) request.getSession().getAttribute("account");
 		Cart cart = this.cartRepo.findByIdAccount(account.getId());
 		List<Cartdetail> list = cartdetailRepo.findCartDetailByIdCart(cart.getId());
 		model.addAttribute("listCart", list);
-		int tongtien=0;
-		for(int i=0; i<list.size(); i++) {
-			tongtien=tongtien+(list.get(i).getQuantity()*list.get(i).getProduct().getPrice());
+		int tongtien = 0;
+		for (int i = 0; i < list.size(); i++) {
+			tongtien = tongtien + (list.get(i).getQuantity() * list.get(i).getProduct().getPrice());
 		}
 		model.addAttribute("tongtien", tongtien);
 		return "admin/myCart";
 	}
-	
+
 	@GetMapping("/member/delete/{id}")
 	public String deleteSpInCart(@PathVariable("id") Integer id) {
 		cartdetailRepo.deleteById(id);
 		return "redirect:/member/viewCart/";
 	}
-	
+
 	@PostMapping("/member/pay")
-	public String pay(Model model,@Valid OrderDTO order, @Valid OrderdetailDTO orderdetail,
-			@Valid CartDetailDTO cartdetail, @Valid ProductDTO product) {
-		Order entity = orderMapper.convertToEntity(order);
+	public String pay(Model model, @Valid OrderDTO order, @Valid OrderdetailDTO orderdetail
+			) {
+		Order orderEntity = orderMapper.convertToEntity(order);
 		Account account = (Account) request.getSession().getAttribute("account");
-		Cartdetail entity1 = cartdetailMapper.convertToEntity(cartdetail);
-		if(cartdetailRepo.count()==0) {
+
+//		List<Cartdetail> listCartDetailEntity = new ArrayList<Cartdetail>();
+//		for (CartDetailDTO cartDetailDTO : listCartdetailDTO) {
+//			listCartDetailEntity.add(cartdetailMapper.convertToEntity(cartDetailDTO));
+//		}
+		
+		if (cartdetailRepo.count()==0) {
 			request.getSession().setAttribute("messagePay", "Bạn chưa có sản phẩm nào trong giỏ hàng để thanh toán !");
 		} else {
-		entity.setAccount(account);
-		entity.setAddress(request.getParameter("address"));
-		orderRepo.save(entity);
-		request.getSession().setAttribute("messagePay", "Thanh toán thành công !");
-		
-//		OrderDetail entity2 = orderdetailMapper.convertToEntity(orderdetail);
-//		entity2.setOrder(entity); 
-//		entity2.setProduct(entity1.getProduct());
-//		entity2.setPrice(entity1.getProduct().getPrice());
-//		entity2.setQuantity(entity1.getQuantity());
-//		
-//		orderdetailRepo.save(entity2);
-		
-		cartdetailRepo.deleteAll();
-		
-		
-//		OrderDetail orderDetail = new OrderDetail();
-//		orderDetail.setOrder(entity);
+
+			orderEntity.setAccount(account);
+			orderEntity.setAddress(request.getParameter("address"));
+			orderRepo.save(orderEntity);
+			
+//			for (Cartdetail cartdetail : listCartDetailEntity) {
+//				OrderDetail orderdetailEntity = new OrderDetail();
+//				orderdetailEntity.setOrder(orderEntity);
+//				orderdetailEntity.setProduct(cartdetail.getProduct());
+//				orderdetailEntity.setPrice(cartdetail.getProduct().getPrice());
+//				orderdetailEntity.setQuantity(cartdetail.getQuantity());
+//				orderdetailRepo.save(orderdetailEntity);
+//			}
+			
+			
+			request.getSession().setAttribute("messagePay", "Thanh toán thành công !");
+			cartdetailRepo.deleteAll();
+
 		}
 		return "redirect:/member/viewCart/";
 	}
-	
-	
-	
 
 }
